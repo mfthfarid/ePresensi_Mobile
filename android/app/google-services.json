@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "688888385423",
+    "project_id": "epresensi-d63f0",
+    "storage_bucket": "epresensi-d63f0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:688888385423:android:5f68c977b97db845c2c5fa",
+        "android_client_info": {
+          "package_name": "com.ePresensi.e_presensi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDl9khPV4CKvbxiuUGAucSA4KRDn4495Dw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
