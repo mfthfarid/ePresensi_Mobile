@@ -9,6 +9,16 @@ class LoginController extends GetxController {
   var isLogin = true.obs;
   var bottom = 0.0.obs;
   RxBool isLoading = false.obs;
+  var isHiddenPassword = true.obs;
+  var isHiddenConfirmPassword = true.obs;
+
+  void togglePasswordVisibility() {
+    isHiddenPassword.value = !isHiddenPassword.value;
+  }
+
+  void toggleConfirmPasswordVisibility() {
+    isHiddenConfirmPassword.value = !isHiddenConfirmPassword.value;
+  }
 
   void login() async {
     isLoading.value = true;

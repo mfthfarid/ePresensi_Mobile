@@ -11,6 +11,11 @@ void main() async {
     GetMaterialApp(
       title: "E Presensi",
       debugShowCheckedModeBanner: false,
+      // theme: ThemeData(
+      //   primarySwatch: Colors.cyan,
+      //   primaryColor: Colors.blue[800],
+      //   canvasColor: Colors.transparent,
+      // ),
       initialRoute: AppPages.INITIAL,
       getPages: AppPages.routes,
     ),
