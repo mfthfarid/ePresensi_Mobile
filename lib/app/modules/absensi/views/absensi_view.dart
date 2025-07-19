@@ -145,9 +145,8 @@ class AbsensiView extends GetView<AbsensiController> {
                       Expanded(
                         child: Obx(() {
                           final nilai = controller.persentasePresensi.value;
-                          final tampil = nilai < 1 && nilai > 0
-                              ? 1
-                              : nilai.round();
+                          final tampil =
+                              nilai < 1 && nilai > 0 ? 1 : nilai.round();
                           return Container(
                             height: 75,
                             padding: const EdgeInsets.all(12),
@@ -190,142 +189,93 @@ class AbsensiView extends GetView<AbsensiController> {
             const SizedBox(height: 20),
 
             // MAPS OSM
-            Obx(() => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextField(
-                      controller: controller.namaController,
-                      decoration: InputDecoration(
-                        labelText: "Nama Lengkap",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextField(
-                      controller: controller.jalanController,
-                      decoration: InputDecoration(
-                        labelText: "Nama Jalan",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextField(
-                      controller: controller.detailAlamatController,
-                      decoration: InputDecoration(
-                        labelText: "Detail Alamat",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: ElevatedButton.icon(
-                      icon: Icon(Icons.search),
-                      label: Text("Cari Alamat"),
-                      onPressed: controller.cariAlamat,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: ElevatedButton.icon(
-                      icon: Icon(Icons.gps_fixed),
-                      label: Text("Ambil Lokasi Saat Ini"),
-                      onPressed: controller.ambilLokasiSaatIni,
-                    ),
-                  ),
-                  if (!controller.tampilPeta.value)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 8),
-                      child: ElevatedButton.icon(
-                        icon: Icon(Icons.map),
-                        label: Text("Pilih Lokasi pada Peta"),
-                        onPressed: () {
-                          controller.tampilPeta.value = true;
-                        },
-                      ),
-                    ),
-                  if (controller.lokasiTerpilih.value != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 8),
-                      child: ElevatedButton.icon(
-                        icon: Icon(Icons.location_on),
-                        label: Text("Cari Nama Alamat dari Titik"),
-                        onPressed: () {
-                          controller.ambilAlamatDariKoordinat(
-                              controller.lokasiTerpilih.value!);
-                        },
-                      ),
-                    ),
-                  if (controller.tampilPeta.value)
-                    Container(
-                      height: 400,
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: FlutterMap(
-                              mapController: controller.mapController,
-                              options: MapOptions(
-                                center: controller.lokasiTerpilih.value ??
-                                    LatLng(-7.7956, 110.3695),
-                                zoom: 13,
-                                onTap: (tapPosition, latlng) {
-                                  controller.lokasiTerpilih.value = latlng;
-                                },
-                              ),
-                              children: [
-                                TileLayer(
-                                  urlTemplate:
-                                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                                  subdomains: ['a', 'b', 'c'],
-                                  userAgentPackageName: 'com.example.app',
-                                ),
-                                if (controller.lokasiTerpilih.value != null)
-                                  MarkerLayer(
-  markers: [
-    Marker(
-      point: controller.lokasiTerpilih.value!,
-      child: Icon(
-        Icons.location_pin,
-        color: Colors.red,
-        size: 40,
-      ),
-    ),
-  ],
-),
+            Obx(() {
+              final lokasi = controller.lokasiSekarang.value;
 
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: ElevatedButton.icon(
-                              icon: Icon(Icons.save),
-                              label: Text("Simpan Lokasi"),
-                              onPressed: controller.simpanLokasi,
-                            ),
+              return Container(
+                margin: EdgeInsets.all(16),
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.blue, width: 2),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade300,
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                height: 400,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: FlutterMap(
+                    mapController: controller.mapController,
+                    options: MapOptions(
+                      center: lokasi ?? controller.titikPusat,
+                      zoom: 17,
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                        subdomains: ['a', 'b', 'c'],
+                      ),
+                      // Marker titik pusat (misalnya sekolah)
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: controller.titikPusat,
+                            child: Icon(Icons.location_on,
+                                color: Colors.green, size: 40),
                           ),
                         ],
                       ),
-                    ),
-                  if (!controller.tampilPeta.value &&
-                      controller.alamatTersimpan.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        "Alamat disimpan: ${controller.alamatTersimpan.value}",
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                ],
-              )),
+                      // Marker posisi user
+                      if (lokasi != null)
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: lokasi,
+                              child: Icon(Icons.person_pin_circle,
+                                  color: Colors.red, size: 40),
+                            ),
+                          ],
+                        ),
+                      // Circle area
+                      if (lokasi != null)
+                        CircleLayer(
+                          circles: [
+                            CircleMarker(
+                              point: controller.titikPusat,
+                              radius: controller.radiusMeter,
+                              borderStrokeWidth: 2,
+                              color: Colors.blue.withOpacity(0.2),
+                              useRadiusInMeter: true,
+                              borderColor: Colors.blue,
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+            // bottomNavigationBar: Obx(() => Padding(
+            //       padding: const EdgeInsets.all(16.0),
+            //       child: Text(
+            //         controller.dalamRadius.value
+            //             ? "✅ Anda berada dalam area yang ditentukan."
+            //             : "❌ Anda berada di luar area radius!",
+            //         textAlign: TextAlign.center,
+            //         style: TextStyle(
+            //           color: controller.dalamRadius.value ? Colors.green : Colors.red,
+            //           fontSize: 16,
+            //           fontWeight: FontWeight.bold,
+            //         ),
+            //       ),
+            //     )),
 
             // Obx(
             //   () => Padding(

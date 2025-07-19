@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -13,25 +12,29 @@ class AbsensiController extends GetxController {
   var adaJadwalSekarang = false.obs;
   RxString jamJadwal = ''.obs;
   var persentasePresensi = 0.0.obs;
-  // Ambil Lokasi firebase
   RxBool isLoading = true.obs;
+
   final mapController = MapController();
-  // Rx<LatLng?> lokasiSaatIni = Rx<LatLng?>(null);
-  Rx<LatLng> posisiSaatIni = LatLng(0, 0).obs;
-  // RxString alamatTersimpan = "".obs;
+  // Titik pusat lokasi (misal: kantor/sekolah)
+  final LatLng titikPusat = LatLng(-8.157573, 113.722885);
+  // Radius dalam meter
+  final double radiusMeter = 100;
+  // Lokasi user saat ini
+  var lokasiSekarang = Rx<LatLng?>(null);
+  // Apakah berada dalam radius
+  var dalamRadius = false.obs;
 
   @override
   void onInit() {
     super.onInit();
     cekJadwalSekarang();
     hitungPersentasePresensi();
-    // ambilLokasi();
+    ambilLokasiSaatIni();
   }
 
   Future<void> cekJadwalSekarang() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('jadwal_presensi')
-        .get();
+    final snapshot =
+        await FirebaseFirestore.instance.collection('jadwal_presensi').get();
 
     final now = DateTime.now();
     bool ditemukan = false;
@@ -61,14 +64,12 @@ class AbsensiController extends GetxController {
   }
 
   Future<void> hitungPersentasePresensi() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('presensi')
-        .get();
+    final snapshot =
+        await FirebaseFirestore.instance.collection('presensi').get();
 
     int total = snapshot.docs.length;
-    int berhasil = snapshot.docs
-        .where((doc) => doc['status'] == 'berhasil')
-        .length;
+    int berhasil =
+        snapshot.docs.where((doc) => doc['status'] == 'berhasil').length;
 
     if (total > 0) {
       persentasePresensi.value = (berhasil / total) * 100;
@@ -77,72 +78,56 @@ class AbsensiController extends GetxController {
     }
   }
 
-  final namaController = TextEditingController();
-  final jalanController = TextEditingController();
-  final detailAlamatController = TextEditingController();
-
-  // final mapController = MapController();
-
-  Rx<LatLng?> lokasiTerpilih = Rx<LatLng?>(null);
-  RxBool tampilPeta = false.obs;
-  RxString alamatTersimpan = "".obs;
-
   Future<void> ambilLokasiSaatIni() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      Get.snackbar(
+          "Lokasi Tidak Aktif", "Aktifkan layanan lokasi di perangkat.");
+      return;
+    }
+
     LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      Get.snackbar(
+          "Izin Lokasi Ditolak", "Buka pengaturan dan izinkan lokasi.");
+      return;
+    }
+
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        Get.snackbar("Izin Lokasi Ditolak", "Tidak bisa mengakses lokasi.");
         return;
       }
     }
 
-    Position position = await Geolocator.getCurrentPosition();
-    final lokasi = LatLng(position.latitude, position.longitude);
+    // Ambil posisi sekarang
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
 
-    lokasiTerpilih.value = lokasi;
-    tampilPeta.value = true;
-    mapController.move(lokasi, 15.0);
+    lokasiSekarang.value = LatLng(position.latitude, position.longitude);
+
+    // Cek apakah dalam radius
+    final distance = Distance().as(
+      LengthUnit.Meter,
+      titikPusat,
+      lokasiSekarang.value!,
+    );
+
+    dalamRadius.value = distance <= radiusMeter;
   }
 
-  Future<void> ambilAlamatDariKoordinat(LatLng posisi) async {
-    try {
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(posisi.latitude, posisi.longitude);
-      if (placemarks.isNotEmpty) {
-        Placemark p = placemarks.first;
-        alamatTersimpan.value = "${p.street}, ${p.subLocality}, ${p.locality}";
-      }
-    } catch (e) {
-      print("Gagal mengambil alamat: $e");
-    }
-  }
-
-  Future<void> cariAlamat() async {
-    try {
-      String alamat =
-          "${jalanController.text} ${detailAlamatController.text}";
-      if (alamat.isEmpty) return;
-
-      List<Location> locations = await locationFromAddress(alamat);
-      if (locations.isNotEmpty) {
-        final lokasi = LatLng(
-          locations.first.latitude,
-          locations.first.longitude,
-        );
-        lokasiTerpilih.value = lokasi;
-        tampilPeta.value = true;
-        mapController.move(lokasi, 15.0);
-      }
-    } catch (e) {
-      print("Gagal mencari alamat: $e");
-    }
-  }
-
-  void simpanLokasi() {
-    if (lokasiTerpilih.value != null) {
-      ambilAlamatDariKoordinat(lokasiTerpilih.value!);
-      tampilPeta.value = false;
-    }
-  }
+  // Future<void> ambilAlamatDariKoordinat(LatLng posisi) async {
+  //   try {
+  //     List<Placemark> placemarks =
+  //         await placemarkFromCoordinates(posisi.latitude, posisi.longitude);
+  //     if (placemarks.isNotEmpty) {
+  //       Placemark p = placemarks.first;
+  //       alamatTersimpan.value = "${p.street}, ${p.subLocality}, ${p.locality}";
+  //     }
+  //   } catch (e) {
+  //     print("Gagal mengambil alamat: $e");
+  //   }
+  // }
 }
