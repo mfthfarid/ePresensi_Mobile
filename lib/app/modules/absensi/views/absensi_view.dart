@@ -64,7 +64,6 @@ class AbsensiView extends GetView<AbsensiController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Nama dan jabatan
             Container(
               padding: const EdgeInsets.all(16),
               width: double.infinity,
@@ -72,7 +71,7 @@ class AbsensiView extends GetView<AbsensiController> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -93,76 +92,284 @@ class AbsensiView extends GetView<AbsensiController> {
                     'Sistem akan mengecek lokasi anda, jika presensi diluar wilayah status presensi anda hari itu merah',
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
+                  SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Obx(
+                          () => Container(
+                            height: 75,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: controller.adaJadwalSekarang.value
+                                  ? Colors.green[50]
+                                  : Colors.yellow[50],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: controller.adaJadwalSekarang.value
+                                    ? Colors.green
+                                    : Colors.yellow,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Center(
+                                  child: Text(
+                                    controller.adaJadwalSekarang.value
+                                        ? '✅ Ada jadwal presensi'
+                                        : '❌ Tidak ada jadwal',
+                                    style: TextStyle(
+                                      color: controller.adaJadwalSekarang.value
+                                          ? Colors.green[800]
+                                          : Colors.yellow[800],
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                if (controller.adaJadwalSekarang.value &&
+                                    controller.jamJadwal.value.isNotEmpty)
+                                  Center(
+                                    child: Text(
+                                      '🕒 Jam: ${controller.jamJadwal.value}',
+                                      style: TextStyle(color: Colors.grey[800]),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12), // Jarak antar kotak
+                      Expanded(
+                        child: Obx(() {
+                          final nilai = controller.persentasePresensi.value;
+                          final tampil = nilai < 1 && nilai > 0
+                              ? 1
+                              : nilai.round();
+                          return Container(
+                            height: 75,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.blue[50],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.blue),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Center(
+                                  child: Text(
+                                    '$tampil% presensi berhasil',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.blue[800],
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                LinearProgressIndicator(
+                                  value: nilai / 100, // nilai dari 0.0 – 1.0
+                                  color: Colors.blue,
+                                  backgroundColor: Colors.blue[100],
+                                  minHeight: 8,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
-            // MAPS OSM
-            Obx(() {
-              final posisi = controller.posisiSaatIni.value;
-              final dalamArea = controller.dalamArea.value;
 
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            // MAPS OSM
+            Obx(() => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Posisi Anda: ${posisi.latitude}, ${posisi.longitude}'),
-                  const SizedBox(height: 20),
-                  Text(
-                    dalamArea
-                        ? '✅ Anda berada di dalam area'
-                        : '❌ Anda di luar area',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: dalamArea ? Colors.green : Colors.red,
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: controller.namaController,
+                      decoration: InputDecoration(
+                        labelText: "Nama Lengkap",
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                   ),
-                ],
-              );
-            }),
-            Obx(
-              () => Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  controller.dalamArea.value
-                      ? "📍 Kamu berada di dalam area"
-                      : "🚫 Kamu berada di luar area",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: controller.dalamArea.value
-                        ? Colors.green
-                        : Colors.red,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: controller.jalanController,
+                      decoration: InputDecoration(
+                        labelText: "Nama Jalan",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: controller.detailAlamatController,
+                      decoration: InputDecoration(
+                        labelText: "Detail Alamat",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: ElevatedButton.icon(
+                      icon: Icon(Icons.search),
+                      label: Text("Cari Alamat"),
+                      onPressed: controller.cariAlamat,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: ElevatedButton.icon(
+                      icon: Icon(Icons.gps_fixed),
+                      label: Text("Ambil Lokasi Saat Ini"),
+                      onPressed: controller.ambilLokasiSaatIni,
+                    ),
+                  ),
+                  if (!controller.tampilPeta.value)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 8),
+                      child: ElevatedButton.icon(
+                        icon: Icon(Icons.map),
+                        label: Text("Pilih Lokasi pada Peta"),
+                        onPressed: () {
+                          controller.tampilPeta.value = true;
+                        },
+                      ),
+                    ),
+                  if (controller.lokasiTerpilih.value != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 8),
+                      child: ElevatedButton.icon(
+                        icon: Icon(Icons.location_on),
+                        label: Text("Cari Nama Alamat dari Titik"),
+                        onPressed: () {
+                          controller.ambilAlamatDariKoordinat(
+                              controller.lokasiTerpilih.value!);
+                        },
+                      ),
+                    ),
+                  if (controller.tampilPeta.value)
+                    Container(
+                      height: 400,
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: FlutterMap(
+                              mapController: controller.mapController,
+                              options: MapOptions(
+                                center: controller.lokasiTerpilih.value ??
+                                    LatLng(-7.7956, 110.3695),
+                                zoom: 13,
+                                onTap: (tapPosition, latlng) {
+                                  controller.lokasiTerpilih.value = latlng;
+                                },
+                              ),
+                              children: [
+                                TileLayer(
+                                  urlTemplate:
+                                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                                  subdomains: ['a', 'b', 'c'],
+                                  userAgentPackageName: 'com.example.app',
+                                ),
+                                if (controller.lokasiTerpilih.value != null)
+                                  MarkerLayer(
+  markers: [
+    Marker(
+      point: controller.lokasiTerpilih.value!,
+      child: Icon(
+        Icons.location_pin,
+        color: Colors.red,
+        size: 40,
+      ),
+    ),
+  ],
+),
 
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ElevatedButton.icon(
+                              icon: Icon(Icons.save),
+                              label: Text("Simpan Lokasi"),
+                              onPressed: controller.simpanLokasi,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (!controller.tampilPeta.value &&
+                      controller.alamatTersimpan.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        "Alamat disimpan: ${controller.alamatTersimpan.value}",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                ],
+              )),
+
+            // Obx(
+            //   () => Padding(
+            //     padding: const EdgeInsets.all(8.0),
+            //     child: Text(
+            //       controller.dalamArea.value
+            //           ? "📍 Kamu berada di dalam area"
+            //           : "🚫 Kamu berada di luar area",
+            //       textAlign: TextAlign.center,
+            //       style: TextStyle(
+            //         color: controller.dalamArea.value
+            //             ? Colors.green
+            //             : Colors.red,
+            //         fontWeight: FontWeight.bold,
+            //         fontSize: 16,
+            //       ),
+            //     ),
+            //   ),
+            // ),
             const SizedBox(height: 20),
 
             // Tombol Cek Lokasi
-            Obx(
-              () => Column(
-                children: [
-                  ElevatedButton(
-                    onPressed: () => controller.cekLokasi(),
-                    child: const Text("Cek Lokasi"),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    controller.dalamArea.value
-                        ? "✅ Anda di dalam area"
-                        : "❌ Anda di luar area",
-                    style: TextStyle(
-                      color: controller.dalamArea.value
-                          ? Colors.green
-                          : Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Obx(
+            //   () => Column(
+            //     children: [
+            //       ElevatedButton(
+            //         onPressed: () => controller.cekLokasi(),
+            //         child: const Text("Cek Lokasi"),
+            //       ),
+            //       const SizedBox(height: 12),
+            //       Text(
+            //         controller.dalamArea.value
+            //             ? "✅ Anda di dalam area"
+            //             : "❌ Anda di luar area",
+            //         style: TextStyle(
+            //           color: controller.dalamArea.value
+            //               ? Colors.green
+            //               : Colors.red,
+            //           fontWeight: FontWeight.bold,
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
             // Jam sekarang (dummy)
             Container(
               width: double.infinity,

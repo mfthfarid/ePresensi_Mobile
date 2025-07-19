@@ -13,21 +13,21 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Get.lazyPut(() => HomeController());
     Get.lazyPut(() => AbsensiView());
-    Get.lazyPut(() => HomeController());
     Get.lazyPut(() => HistoryController());
     Get.lazyPut(() => ProfileController());
   }
 
   final List<Widget> pages = [
-    // const Center(
-    //   child: Text(
-    //     '',
-    //     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-    //   ),
-    // ),
+    const Center(
+      child: Text(
+        '',
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+    ),
+    // HomeView(),
     AbsensiView(),
-    HomeView(),
     HistoryView(),
     ProfileView(),
   ];
