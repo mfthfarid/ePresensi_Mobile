@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -7,18 +8,26 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class AbsensiController extends GetxController {
+  RxString jadwalId = ''.obs;
   var adaJadwalSekarang = false.obs;
   RxString jamJadwal = ''.obs;
   var persentasePresensi = 0.0.obs;
   RxBool isLoading = true.obs;
 
   final mapController = MapController();
-  // Titik pusat lokasi (misal: kantor/sekolah)
-  final LatLng titikPusat = LatLng(-8.157573, 113.722885);
+
+  // Lokasi jti
+  final LatLng titikPusat = LatLng(-8.157573, 113.722885); // Titik pusat lokasi
+  final LatLng lokasiPresensi = LatLng(-8.157573, 113.722885); // lokasi acuan
+
+  // Lokasi random
+  // final LatLng titikPusat = LatLng(-8.169330, 113.728119); // Titik pusat lokasi
+  // final LatLng lokasiPresensi = LatLng(-8.169330, 113.728119); // lokasi acuan
   // Radius dalam meter
-  final double radiusMeter = 100;
+  final double radiusMeter = 1200; // 80
   // Lokasi user saat ini
   var lokasiSekarang = Rx<LatLng?>(null);
   // Apakah berada dalam radius
@@ -37,29 +46,33 @@ class AbsensiController extends GetxController {
         await FirebaseFirestore.instance.collection('jadwal_presensi').get();
 
     final now = DateTime.now();
+
     bool ditemukan = false;
 
     for (final doc in snapshot.docs) {
       final mulai = (doc['waktu_mulai'] as Timestamp).toDate();
       final akhir = (doc['waktu_akhir'] as Timestamp).toDate();
 
-      if (now.isAfter(mulai) && now.isBefore(akhir)) {
-        ditemukan = true;
+      print("Cek jadwal: mulai=$mulai, akhir=$akhir, now=$now");
 
-        // Format jam: 08:00 - 10:00
+      if (!now.isBefore(mulai) && !now.isAfter(akhir)) {
+        ditemukan = true;
+        jadwalId.value = doc.id;
+
         final formatJam =
             "${mulai.hour.toString().padLeft(2, '0')}:${mulai.minute.toString().padLeft(2, '0')} - "
             "${akhir.hour.toString().padLeft(2, '0')}:${akhir.minute.toString().padLeft(2, '0')}";
 
         jamJadwal.value = formatJam;
+        adaJadwalSekarang.value = true;
         break;
       }
     }
 
-    adaJadwalSekarang.value = ditemukan;
-
     if (!ditemukan) {
-      jamJadwal.value = ''; // kosongkan jika tidak ada jadwal
+      jadwalId.value = '';
+      jamJadwal.value = 'Tidak ada jadwal aktif';
+      adaJadwalSekarang.value = false; // ✅ DITAMBAHKAN DI SINI
     }
   }
 
@@ -68,13 +81,19 @@ class AbsensiController extends GetxController {
         await FirebaseFirestore.instance.collection('presensi').get();
 
     int total = snapshot.docs.length;
-    int berhasil =
-        snapshot.docs.where((doc) => doc['status'] == 'berhasil').length;
+    int berhasil = snapshot.docs.where((doc) => doc['ket'] == 'hasdir').length;
 
     if (total > 0) {
       persentasePresensi.value = (berhasil / total) * 100;
     } else {
       persentasePresensi.value = 0.0;
+    }
+  }
+
+  Future<void> mintaIzinLokasi() async {
+    var status = await Permission.location.status;
+    if (!status.isGranted) {
+      await Permission.location.request();
     }
   }
 
@@ -118,16 +137,95 @@ class AbsensiController extends GetxController {
     dalamRadius.value = distance <= radiusMeter;
   }
 
-  // Future<void> ambilAlamatDariKoordinat(LatLng posisi) async {
-  //   try {
-  //     List<Placemark> placemarks =
-  //         await placemarkFromCoordinates(posisi.latitude, posisi.longitude);
-  //     if (placemarks.isNotEmpty) {
-  //       Placemark p = placemarks.first;
-  //       alamatTersimpan.value = "${p.street}, ${p.subLocality}, ${p.locality}";
-  //     }
-  //   } catch (e) {
-  //     print("Gagal mengambil alamat: $e");
-  //   }
-  // }
+  Future<void> presensi() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    // Cek radius
+    if (!dalamRadius.value) {
+      Get.snackbar("Gagal", "Anda berada di luar area presensi");
+      return;
+    }
+
+    // Cek jadwal aktif
+    if (jadwalId.value.isEmpty) {
+      Get.snackbar("Gagal", "Tidak ada jadwal aktif");
+      return;
+    }
+
+    // Cek nisn / id user
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    if (!doc.exists || !doc.data()!.containsKey('nisn')) {
+      Get.snackbar("Gagal", "NISN tidak ditemukan");
+      return;
+    }
+
+    final nisn = doc['nisn'];
+    await FirebaseFirestore.instance.collection('presensi').add({
+      'userId': uid,
+      'jadwalId': jadwalId.value,
+      'ket': 'Hadir',
+      'waktu': Timestamp.now(),
+    });
+
+    Get.snackbar("Sukses", "Presensi berhasil disimpan");
+  }
+
+  void ajukanIzin() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    if (jadwalId.value.isEmpty) {
+      Get.snackbar("Gagal", "Tidak ada jadwal aktif");
+      return;
+    }
+
+    // Cek nisn / id user
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    if (!doc.exists || !doc.data()!.containsKey('nisn')) {
+      Get.snackbar("Gagal", "NISN tidak ditemukan");
+      return;
+    }
+
+    final nisn = doc['nisn'];
+    await FirebaseFirestore.instance.collection('presensi').add({
+      'userId': uid,
+      'jadwalId': jadwalId.value,
+      'ket': 'Izin',
+      'waktu': Timestamp.now(),
+    });
+
+    Get.snackbar("Terkirim", "Permintaan izin berhasil dikirim.");
+  }
+
+  Future<void> pulang() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    // Cek jadwal aktif
+    if (jadwalId.value.isEmpty) {
+      Get.snackbar("Gagal", "Tidak ada jadwal aktif");
+      return;
+    }
+
+    // Cek nisn / id user
+    final doc =
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    if (!doc.exists || !doc.data()!.containsKey('nisn')) {
+      Get.snackbar("Gagal", "NISN tidak ditemukan");
+      return;
+    }
+
+    final nisn = doc['nisn'];
+    await FirebaseFirestore.instance.collection('presensi').add({
+      'userId': uid,
+      'jadwalId': jadwalId.value,
+      'ket': 'Pulang',
+      'waktu': Timestamp.now(),
+    });
+
+    Get.snackbar("Sukses", "Presensi berhasil disimpan");
+  }
 }

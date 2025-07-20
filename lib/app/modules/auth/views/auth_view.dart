@@ -90,7 +90,7 @@ class LoginView extends GetView<AuthController> {
                                       ),
                                       borderRadius: BorderRadius.only(
                                         topLeft: Radius.circular(20),
-                                        topRight: Radius.circular(40),
+                                        topRight: Radius.circular(20),
                                       ),
                                     ),
                                     child: Container(
@@ -388,7 +388,7 @@ class LoginView extends GetView<AuthController> {
                                               255, 202, 220, 255),
                                           borderRadius: BorderRadius.only(
                                             topLeft: Radius.circular(20),
-                                            topRight: Radius.circular(40),
+                                            topRight: Radius.circular(20),
                                           ),
                                         ),
                                         child: Container(
@@ -407,7 +407,7 @@ class LoginView extends GetView<AuthController> {
                                                             .start,
                                                     children: [
                                                       Text(
-                                                        'Register',
+                                                        'Login',
                                                         style: TextStyle(
                                                           fontSize: 28,
                                                           fontWeight:
@@ -436,34 +436,6 @@ class LoginView extends GetView<AuthController> {
                                               SizedBox(height: 20),
                                               TextField(
                                                 controller: authController
-                                                    .namaController,
-                                                decoration: InputDecoration(
-                                                  border: OutlineInputBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                  ),
-                                                  labelText: "Nama",
-                                                  hintText: "Nama siswa",
-                                                ),
-                                              ),
-                                              SizedBox(height: 20),
-                                              TextField(
-                                                controller: authController
-                                                    .nisnController,
-                                                decoration: InputDecoration(
-                                                  border: OutlineInputBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                  ),
-                                                  labelText: "NISN",
-                                                  hintText: "03254",
-                                                ),
-                                              ),
-                                              SizedBox(height: 20),
-                                              TextField(
-                                                controller: authController
                                                     .emailController,
                                                 decoration: InputDecoration(
                                                   border: OutlineInputBorder(
@@ -471,70 +443,48 @@ class LoginView extends GetView<AuthController> {
                                                         BorderRadius.circular(
                                                             10),
                                                   ),
-                                                  labelText: "Email",
-                                                  hintText: "siswa@gmail.com",
-                                                  suffixIcon: Icon(
-                                                      Icons.email_outlined),
+                                                  labelText: "NISN/Email",
+                                                  hintText:
+                                                      "Masukan email atau NISN",
+                                                  suffixIcon: InkWell(
+                                                    // onTap: () {},
+                                                    child: Icon(
+                                                      Icons.email_outlined,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                               SizedBox(height: 20),
-                                              Obx(() => TextField(
-                                                    controller: authController
-                                                        .passwordController,
-                                                    obscureText: controller
-                                                        .isHiddenPassword.value,
-                                                    decoration: InputDecoration(
-                                                      border:
-                                                          OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
-                                                      ),
-                                                      labelText: "Password",
-                                                      hintText: "******",
-                                                      suffixIcon: InkWell(
-                                                        onTap: controller
-                                                            .togglePasswordVisibility,
-                                                        child: Icon(controller
+                                              Obx(
+                                                () => TextField(
+                                                  controller: authController
+                                                      .passwordController,
+                                                  obscureText: controller
+                                                      .isHiddenPassword.value,
+                                                  decoration: InputDecoration(
+                                                    border: OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                    labelText: "Password",
+                                                    hintText: "******",
+                                                    suffixIcon: InkWell(
+                                                      onTap: controller
+                                                          .togglePasswordVisibility,
+                                                      child: Icon(
+                                                        controller
                                                                 .isHiddenPassword
                                                                 .value
                                                             ? Icons
                                                                 .visibility_off_outlined
                                                             : Icons
-                                                                .visibility_outlined),
+                                                                .visibility_outlined,
                                                       ),
                                                     ),
-                                                  )),
-                                              SizedBox(height: 20),
-                                              Obx(() => TextField(
-                                                    controller: authController
-                                                        .confirmPasswordController,
-                                                    obscureText: controller
-                                                        .isHiddenConfirmPassword
-                                                        .value,
-                                                    decoration: InputDecoration(
-                                                      border:
-                                                          OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
-                                                      ),
-                                                      labelText:
-                                                          "Confirm Password",
-                                                      hintText: "******",
-                                                      suffixIcon: InkWell(
-                                                        onTap: controller
-                                                            .toggleConfirmPasswordVisibility,
-                                                        child: Icon(controller
-                                                                .isHiddenConfirmPassword
-                                                                .value
-                                                            ? Icons
-                                                                .visibility_off_outlined
-                                                            : Icons
-                                                                .visibility_outlined),
-                                                      ),
-                                                    ),
-                                                  )),
+                                                  ),
+                                                ),
+                                              ),
                                               SizedBox(height: 20),
                                               Obx(() => Container(
                                                     height: 50,
@@ -550,9 +500,10 @@ class LoginView extends GetView<AuthController> {
                                                             child:
                                                                 CircularProgressIndicator())
                                                         : ElevatedButton(
-                                                            onPressed:
-                                                                authController
-                                                                    .register,
+                                                            onPressed: () {
+                                                              authController
+                                                                  .login();
+                                                            },
                                                             style:
                                                                 ElevatedButton
                                                                     .styleFrom(
@@ -572,7 +523,7 @@ class LoginView extends GetView<AuthController> {
                                                               ),
                                                             ),
                                                             child: Text(
-                                                              'Register',
+                                                              'Login',
                                                               style: TextStyle(
                                                                 fontSize: 16,
                                                                 fontWeight:
@@ -592,12 +543,12 @@ class LoginView extends GetView<AuthController> {
                                                     CrossAxisAlignment.center,
                                                 children: [
                                                   Text(
-                                                    'Sudah punya akun?',
+                                                    'Belum punya akun?',
                                                     style:
                                                         TextStyle(fontSize: 16),
                                                   ),
                                                   Text(
-                                                    ' Login',
+                                                    ' Register',
                                                     style: TextStyle(
                                                       fontSize: 16,
                                                       color: Colors.red,

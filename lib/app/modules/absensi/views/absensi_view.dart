@@ -89,7 +89,7 @@ class AbsensiView extends GetView<AbsensiController> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'Sistem akan mengecek lokasi anda, jika presensi diluar wilayah status presensi anda hari itu merah',
+                    'Sistem akan mengecek lokasi anda, jika presensi diluar wilayah status presensi anda tidak valid',
                     style: TextStyle(fontSize: 14, color: Colors.grey),
                   ),
                   SizedBox(height: 20),
@@ -98,7 +98,7 @@ class AbsensiView extends GetView<AbsensiController> {
                       Expanded(
                         child: Obx(
                           () => Container(
-                            height: 75,
+                            height: 100,
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: controller.adaJadwalSekarang.value
@@ -132,7 +132,7 @@ class AbsensiView extends GetView<AbsensiController> {
                                     controller.jamJadwal.value.isNotEmpty)
                                   Center(
                                     child: Text(
-                                      '🕒 Jam: ${controller.jamJadwal.value}',
+                                      '🕒: ${controller.jamJadwal.value}',
                                       style: TextStyle(color: Colors.grey[800]),
                                     ),
                                   ),
@@ -148,7 +148,7 @@ class AbsensiView extends GetView<AbsensiController> {
                           final tampil =
                               nilai < 1 && nilai > 0 ? 1 : nilai.round();
                           return Container(
-                            height: 75,
+                            height: 100,
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: Colors.blue[50],
@@ -160,7 +160,7 @@ class AbsensiView extends GetView<AbsensiController> {
                               children: [
                                 Center(
                                   child: Text(
-                                    '$tampil% presensi berhasil',
+                                    '$tampil% berhasil',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: Colors.blue[800],
@@ -187,7 +187,6 @@ class AbsensiView extends GetView<AbsensiController> {
               ),
             ),
             const SizedBox(height: 20),
-
             // MAPS OSM
             Obx(() {
               final lokasi = controller.lokasiSekarang.value;
@@ -207,14 +206,14 @@ class AbsensiView extends GetView<AbsensiController> {
                     ),
                   ],
                 ),
-                height: 400,
+                height: 200,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: FlutterMap(
                     mapController: controller.mapController,
                     options: MapOptions(
                       center: lokasi ?? controller.titikPusat,
-                      zoom: 17,
+                      zoom: 15,
                     ),
                     children: [
                       TileLayer(
@@ -227,7 +226,7 @@ class AbsensiView extends GetView<AbsensiController> {
                         markers: [
                           Marker(
                             point: controller.titikPusat,
-                            child: Icon(Icons.location_on,
+                            child: Icon(Icons.school,
                                 color: Colors.green, size: 40),
                           ),
                         ],
@@ -262,65 +261,7 @@ class AbsensiView extends GetView<AbsensiController> {
                 ),
               );
             }),
-            // bottomNavigationBar: Obx(() => Padding(
-            //       padding: const EdgeInsets.all(16.0),
-            //       child: Text(
-            //         controller.dalamRadius.value
-            //             ? "✅ Anda berada dalam area yang ditentukan."
-            //             : "❌ Anda berada di luar area radius!",
-            //         textAlign: TextAlign.center,
-            //         style: TextStyle(
-            //           color: controller.dalamRadius.value ? Colors.green : Colors.red,
-            //           fontSize: 16,
-            //           fontWeight: FontWeight.bold,
-            //         ),
-            //       ),
-            //     )),
-
-            // Obx(
-            //   () => Padding(
-            //     padding: const EdgeInsets.all(8.0),
-            //     child: Text(
-            //       controller.dalamArea.value
-            //           ? "📍 Kamu berada di dalam area"
-            //           : "🚫 Kamu berada di luar area",
-            //       textAlign: TextAlign.center,
-            //       style: TextStyle(
-            //         color: controller.dalamArea.value
-            //             ? Colors.green
-            //             : Colors.red,
-            //         fontWeight: FontWeight.bold,
-            //         fontSize: 16,
-            //       ),
-            //     ),
-            //   ),
-            // ),
             const SizedBox(height: 20),
-
-            // Tombol Cek Lokasi
-            // Obx(
-            //   () => Column(
-            //     children: [
-            //       ElevatedButton(
-            //         onPressed: () => controller.cekLokasi(),
-            //         child: const Text("Cek Lokasi"),
-            //       ),
-            //       const SizedBox(height: 12),
-            //       Text(
-            //         controller.dalamArea.value
-            //             ? "✅ Anda di dalam area"
-            //             : "❌ Anda di luar area",
-            //         style: TextStyle(
-            //           color: controller.dalamArea.value
-            //               ? Colors.green
-            //               : Colors.red,
-            //           fontWeight: FontWeight.bold,
-            //         ),
-            //       ),
-            //     ],
-            //   ),
-            // ),
-            // Jam sekarang (dummy)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -328,77 +269,113 @@ class AbsensiView extends GetView<AbsensiController> {
                 color: Colors.indigo[100],
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Center(
-                child: Text(
-                  '08:45:12',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 30),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Obx(() {
+                    if (!controller.adaJadwalSekarang.value) {
+                      return Column(
+                        children: [
+                          SizedBox(height: 20),
+                          Text(
+                            "Tidak ada jadwal presensi saat ini.",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      );
+                    }
+                    return Column(
+                      children: [
+                        // Text(
+                        //   "Jadwal Aktif: ${controller.jamJadwal.value}",
+                        //   style: TextStyle(fontWeight: FontWeight.bold),
+                        // ),
+                        // SizedBox(height: 10),
 
-            // Tombol absen masuk
-            ElevatedButton.icon(
-              onPressed: () {}, // TODO: isi fungsi absen masuk
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-                backgroundColor: Colors.green,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.login),
-              label: const Text('Absen Masuk'),
-            ),
-            const SizedBox(height: 16),
+                        /// Tombol Presensi
+                        ElevatedButton(
+                          onPressed: () => controller.presensi(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 32, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text("Presensi Masuk"),
+                        ),
+                        SizedBox(height: 10),
 
-            // Tombol absen pulang
-            ElevatedButton.icon(
-              onPressed: () {}, // TODO: isi fungsi absen pulang
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                        /// Tombol Izin
+                        ElevatedButton(
+                          onPressed: controller.ajukanIzin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 32, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text("Ajukan Izin"),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => controller.pulang(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 32, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text("Presensi Pulang"),
+                        ),
+                      ],
+                    );
+                  }),
+                ],
               ),
-              icon: const Icon(Icons.logout),
-              label: const Text('Absen Pulang'),
+              // child: const Center(
+              //   child: Text(
+              //     '08:45:12',
+              //     style: TextStyle(
+              //       fontSize: 32,
+              //       fontWeight: FontWeight.bold,
+              //       color: Colors.indigo,
+              //     ),
+              //   ),
+              // ),
             ),
-
             const SizedBox(height: 30),
 
             // Riwayat atau status absen hari ini
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Status Hari Ini',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-                  Text('Absen Masuk: -'),
-                  Text('Absen Pulang: -'),
-                ],
-              ),
-            ),
+            // Container(
+            //   width: double.infinity,
+            //   padding: const EdgeInsets.all(16),
+            //   decoration: BoxDecoration(
+            //     color: Colors.white,
+            //     borderRadius: BorderRadius.circular(12),
+            //   ),
+            //   child: const Column(
+            //     crossAxisAlignment: CrossAxisAlignment.start,
+            //     children: [
+            //       Text(
+            //         'Status Hari Ini',
+            //         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            //       ),
+            //       SizedBox(height: 10),
+            //       Text('Absen Masuk: -'),
+            //       Text('Absen Pulang: -'),
+            //     ],
+            //   ),
+            // ),
           ],
         ),
       ),
-      // body: SafeArea(
-      //   child: Container(color: const Color.fromARGB(255, 213, 242, 255)),
-      // ),
     );
   }
 }

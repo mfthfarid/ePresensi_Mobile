@@ -4,7 +4,6 @@ import '../controllers/history_controller.dart';
 
 class HistoryView extends GetView<HistoryController> {
   final controller = Get.put(HistoryController());
-  // const HistoryView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -69,10 +68,35 @@ class HistoryView extends GetView<HistoryController> {
           itemCount: controller.riwayatList.length,
           itemBuilder: (context, index) {
             final riwayat = controller.riwayatList[index];
-            return ListTile(
-              leading: Icon(Icons.access_time),
-              title: Text(riwayat['tanggal']),
-              subtitle: Text("Status: ${riwayat['status']}"),
+
+            // Tentukan warna berdasarkan keterangan
+            Color getCardColor(String keterangan) {
+              switch (keterangan.toLowerCase()) {
+                case 'hadir':
+                  return Colors.green.shade700;
+                case 'izin':
+                  return Colors.yellow.shade700;
+                case 'Pulang':
+                  return Colors.red;
+                default:
+                  return Colors.grey.shade200;
+              }
+            }
+
+            return Card(
+              color: getCardColor(riwayat['keterangan'] ?? ''),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ListTile(
+                leading: Icon(Icons.access_time, color: Colors.blue),
+                title: Text(riwayat['tanggal']),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Keterangan: ${riwayat['keterangan']}"),
+                    Text("Jadwal ID: ${riwayat['jadwalId']}"),
+                  ],
+                ),
+              ),
             );
           },
         );

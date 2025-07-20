@@ -56,20 +56,23 @@ class AuthController extends GetxController {
 
     isLoading.value = true;
     try {
-      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
+      final userCredential = await auth.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
-      await FirebaseFirestore.instance.collection("users").doc(nisn).set({
-        'uid': nisn,
+      final uid = userCredential.user!.uid;
+      final nisn = nisnController.text.trim();
+
+      await FirebaseFirestore.instance.collection("users").doc(uid).set({
+        'uid': uid,
+        'nisn': nisn,
         'nama': namaController.text,
-        'nisn': nisnController.text.trim(),
         'email': emailController.text.trim(),
-        'password': passwordController.text.trim(),
         'createdAt': Timestamp.now(),
         'updatedAt': Timestamp.now(),
       });
+
       Get.snackbar("Berhasil", "Register berhasil");
       Get.offAllNamed(Routes.LOGIN);
     } on FirebaseAuthException catch (e) {
